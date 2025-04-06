@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stringtheorie trifft Dunkle Energie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+      @font-face {
+        font-family: 'LucideIcons';
+        src: url(https://cdn.jsdelivr.net/npm/lucide-static@latest/font/Lucide.ttf) format('truetype');
+      }
+      .lucide {
+        font-family: 'LucideIcons';
+        font-size: 1.25rem; /* Adjust size as needed */
+        line-height: 1;
+      }
+      /* Basic Tooltip Styling */
+      .tooltip {
+        position: relative;
+        display: inline-block;
+        cursor: help;
+      }
+      .tooltip .tooltiptext {
+        visibility: hidden;
+        width: 200px;
+        background-color: #555;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px 10px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%; /* Position above the element */
+        left: 50%;
+        margin-left: -100px; /* Center the tooltip */
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 0.875rem;
+      }
+      .tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
+      }
+      /* Style for canvas containers */
+      .canvas-container {
+          border: 1px solid #4a5568; /* Tailwind gray-700 */
+          border-radius: 0.5rem; /* Tailwind rounded-lg */
+          position: relative;
+          overflow: hidden; /* Keep canvas content inside */
+          background-color: #1a202c; /* Tailwind gray-900 */
+      }
+       canvas {
+          display: block; /* Remove extra space below canvas */
+          background-color: #111827; /* Darker background for contrast */
+       }
+       /* Style for the time slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #4a5568; /* Tailwind gray-700 */
+            border-radius: 5px;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+        }
+        input[type=range]:hover {
+            opacity: 1;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #6366f1; /* Tailwind indigo-500 */
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        input[type=range]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #6366f1; /* Tailwind indigo-500 */
+            border-radius: 50%;
+            cursor: pointer;
+            border: none; /* Remove default border */
+        }
+        /* Style for info box */
+        .info-box {
+            background-color: rgba(31, 41, 55, 0.8); /* Tailwind gray-800 with opacity */
+            border: 1px solid #4b5563; /* Tailwind gray-600 */
+            border-radius: 0.375rem; /* Tailwind rounded-md */
+            padding: 0.75rem; /* Tailwind p-3 */
+            margin-top: 0.5rem; /* Tailwind mt-2 */
+        }
+
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 font-['Inter'] p-6 md:p-10">
+
+    <div class="max-w-7xl mx-auto">
+
+        <header class="mb-8 text-center border-b border-gray-700 pb-4">
+            <h1 class="text-3xl md:text-4xl font-bold text-indigo-400 mb-2">Stringtheorie trifft Dunkle Energie: Das Dynamische Universum</h1>
+            <p class="text-lg text-gray-400 max-w-3xl mx-auto">
+                Erkunden Sie die Verbindung zwischen den kleinsten Skalen (Strings auf der Planck-Skala) und der größten (Expansion des Universums), vermittelt durch eine quantenhafte, nicht-kommutative Raumzeit und eine sich entwickelnde Dunkle Energie.
+                <span class="block mt-2 text-sm italic">"Das Universum verhält sich wie ein musikalisches Instrument, dessen tiefste Saiten (Strings) mit dem Klang des Kosmos selbst in Resonanz stehen – durch Dunkle Energie moduliert."</span>
+            </p>
+        </header>
+
+        <div class="mb-6 px-4">
+            <label for="timeSlider" class="block text-sm font-medium text-gray-400 mb-2">Kosmische Zeit (Vergangenheit <span class="lucide" aria-hidden="true">arrow_left_right</span> Zukunft)</label>
+            <input type="range" id="timeSlider" name="timeSlider" min="0" max="100" value="50" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg dark:bg-gray-600">
+             <div class="flex justify-between text-xs text-gray-500 mt-1">
+                <span>Frühes Universum</span>
+                <span>Gegenwart</span>
+                <span>Ferne Zukunft</span>
+            </div>
+            <p id="timeValue" class="text-center text-sm text-indigo-400 mt-1">Zeitpunkt: <span id="sliderValueDisplay">50</span> ( beeinflusst Expansion & DE-Dichte)</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+            <div class="canvas-container flex flex-col items-center p-4">
+                <h2 class="text-xl font-semibold mb-2 text-indigo-300">Planck-Skala: Strings</h2>
+                 <div class="tooltip w-full text-center mb-2">
+                    <span class="lucide text-yellow-400" aria-hidden="true">info</span>
+                    <span class="tooltiptext">Strings sind winzige, vibrierende 1D-Objekte. Ihre Schwingungen bestimmen die Eigenschaften von Teilchen. Bewegen Sie die Maus darüber.</span>
+                </div>
+                <canvas id="stringCanvas" width="300" height="200"></canvas>
+                <p class="text-xs text-gray-500 mt-2 text-center">Simulation schwingender Strings. Interaktion ändert Frequenz leicht.</p>
+            </div>
+
+            <div class="canvas-container flex flex-col items-center p-4">
+                <h2 class="text-xl font-semibold mb-2 text-indigo-300">Quanten-Raumzeit</h2>
+                 <div class="tooltip w-full text-center mb-2">
+                    <span class="lucide text-yellow-400" aria-hidden="true">info</span>
+                    <span class="tooltiptext">In diesem Modell ist die Raumzeit auf Quantenebene "nicht-kommutativ": Ort und Zeit sind nicht unabhängig voneinander messbar (wie Ort/Impuls in QM). Klicken Sie auf das Gitter.</span>
+                </div>
+                <canvas id="spacetimeCanvas" width="300" height="200"></canvas>
+                 <p class="text-xs text-gray-500 mt-2 text-center">Vereinfachte Darstellung eines Raumzeit-Gitters. Klick verzerrt es lokal.</p>
+            </div>
+
+            <div class="canvas-container flex flex-col items-center p-4">
+                <h2 class="text-xl font-semibold mb-2 text-indigo-300">Kosmische Expansion</h2>
+                 <div class="tooltip w-full text-center mb-2">
+                    <span class="lucide text-yellow-400" aria-hidden="true">info</span>
+                    <span class="tooltiptext">Dunkle Energie treibt die beschleunigte Expansion. Dieses Modell (und DESI-Daten) deutet an, dass ihre Dichte über die Zeit abnimmt. Beobachten Sie die Galaxienbewegung mit dem Zeit-Slider.</span>
+                </div>
+                <canvas id="expansionCanvas" width="300" height="200"></canvas>
+                 <p class="text-xs text-gray-500 mt-2 text-center">Punkte repräsentieren Galaxien. Ihr Abstand ändert sich mit der Zeit.</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="info-box">
+                <h3 class="text-lg font-semibold mb-2 text-indigo-300 flex items-center">
+                    <span class="lucide mr-2 text-green-400">atom</span> Quanteninterferenz & Nicht-Kommutativität
+                </h3>
+                <p class="text-sm text-gray-300">
+                    Die nicht-kommutative Natur der Raumzeit in diesem Modell könnte zu komplexen <strong class="text-green-400">Quanteninterferenzmustern</strong> führen, die in der Standardphysik nicht auftreten. Diese wären prinzipiell messbar (z.B. in Tisch-Experimenten) und könnten als experimenteller Test für Stringtheorie/Quantengravitation dienen. Die Verzerrung im mittleren Canvas ist eine stark vereinfachte Metapher dafür.
+                </p>
+            </div>
+
+            <div class="info-box">
+                <h3 class="text-lg font-semibold mb-2 text-indigo-300 flex items-center">
+                     <span class="lucide mr-2 text-purple-400">trending_up</span> Dynamik der Dunklen Energie (DE)
+                </h3>
+                <p class="text-sm text-gray-300">
+                    Im Gegensatz zum Standardmodell (konstante DE) sagt dieses Stringtheorie-Modell eine <strong class="text-purple-400">zeitlich veränderliche Dichte</strong> der Dunklen Energie voraus, die über kosmische Zeiten abnimmt. Dies passt besser zu den jüngsten DESI-Beobachtungen. Der Zeit-Slider oben beeinflusst die Expansionsrate im rechten Canvas, um dies zu simulieren (höhere Werte = spätere Zeit = langsamere Beschleunigung/geringere DE-Dichte).
+                </p>
+                 <p id="deDensity" class="text-sm mt-2 text-purple-300">Aktuelle simulierte DE-Dichte: <span id="deValueDisplay">Hoch</span></p>
+            </div>
+
+             <div class="info-box md:col-span-2">
+                <h3 class="text-lg font-semibold mb-2 text-indigo-300 flex items-center">
+                     <span class="lucide mr-2 text-blue-400">function_square</span> Visualisierte Verbindung (Konzept)
+                </h3>
+                <p class="text-sm text-gray-300">
+                    Eine Kernaussage des Modells ist die Verbindung zwischen der <strong class="text-blue-400">Planck-Skala</strong> (Strings, Quantengravitation) und der <strong class="text-blue-400">kosmologischen Skala</strong> (Expansion, Dunkle Energie). Symbolisch:
+                    <code class="block bg-gray-700 p-2 rounded mt-1 text-xs sm:text-sm overflow-x-auto">
+                        Λ(t) ~ f( L<sub>Planck</sub> , R<sub>Universum</sub>(t) , [X, T] ≠ 0 )
+                    </code>
+                    Wobei Λ(t) die zeitabhängige Dunkle Energie (kosmologische Konstante) ist, die von der Planck-Länge, dem Radius des Universums und der Nicht-Kommutativität der Raumzeit ([X, T] ≠ 0) abhängt. Dies ist eine konzeptionelle Darstellung, keine exakte Gleichung.
+                </p>
+            </div>
+        </div>
+
+        <footer class="text-center border-t border-gray-700 pt-6 mt-8">
+            <h2 class="text-xl font-semibold mb-4 text-indigo-300">Weitere Erkundungen</h2>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 ease-in-out disabled:opacity-50" disabled>
+                    <span class="lucide mr-1" style="font-size: 1em; vertical-align: text-bottom;">help_circle</span> Mini-Quiz (Demnächst)
+                </button>
+                 <button class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg transition duration-150 ease-in-out disabled:opacity-50" disabled>
+                     <span class="lucide mr-1" style="font-size: 1em; vertical-align: text-bottom;">play</span> Erweiterte Simulation (Demnächst)
+                </button>
+            </div>
+             <p class="text-xs text-gray-500 mt-4">Basierend auf Forschung inspiriert von Kavic et al. und DESI-Daten.</p>
+        </footer>
+
+    </div>
+
+    <script>
+        // --- Canvas Setup ---
+        const stringCanvas = document.getElementById('stringCanvas');
+        const stringCtx = stringCanvas.getContext('2d');
+        const spacetimeCanvas = document.getElementById('spacetimeCanvas');
+        const spacetimeCtx = spacetimeCanvas.getContext('2d');
+        const expansionCanvas = document.getElementById('expansionCanvas');
+        const expansionCtx = expansionCanvas.getContext('2d');
+
+        // Shared dimensions (ensure canvas elements have explicit width/height)
+        const canvasWidth = 300;
+        const canvasHeight = 200;
+        stringCanvas.width = canvasWidth;
+        stringCanvas.height = canvasHeight;
+        spacetimeCanvas.width = canvasWidth;
+        spacetimeCanvas.height = canvasHeight;
+        expansionCanvas.width = canvasWidth;
+        expansionCanvas.height = canvasHeight;
+
+        // --- Time Slider ---
+        const timeSlider = document.getElementById('timeSlider');
+        const sliderValueDisplay = document.getElementById('sliderValueDisplay');
+        const deValueDisplay = document.getElementById('deValueDisplay');
+        let currentTime = parseInt(timeSlider.value); // 0-100
+
+        timeSlider.addEventListener('input', (event) => {
+            currentTime = parseInt(event.target.value);
+            sliderValueDisplay.textContent = currentTime;
+            updateDEDisplay(currentTime);
+            // No need to call drawExpansion here, animation loop handles it
+        });
+
+        function updateDEDisplay(time) {
+             // Simulate decreasing DE density with time
+            if (time < 33) {
+                deValueDisplay.textContent = "Sehr Hoch";
+            } else if (time < 66) {
+                deValueDisplay.textContent = "Hoch";
+            } else {
+                 deValueDisplay.textContent = "Mittel (Abnehmend)";
+            }
+        }
+        updateDEDisplay(currentTime); // Initial display
+
+
+        // --- String Visualization ---
+        let stringPhase = 0;
+        let baseFrequency = 0.05;
+        let hoverFrequencyMultiplier = 1.5; // Increase frequency on hover
+        let mouseX_string = -1; // Track mouse position for interaction
+        let mouseY_string = -1;
+
+        stringCanvas.addEventListener('mousemove', (e) => {
+            const rect = stringCanvas.getBoundingClientRect();
+            mouseX_string = e.clientX - rect.left;
+            mouseY_string = e.clientY - rect.top;
+        });
+        stringCanvas.addEventListener('mouseleave', () => {
+             mouseX_string = -1;
+             mouseY_string = -1;
+        });
+
+        function drawStrings() {
+            stringCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+            stringCtx.lineWidth = 1.5;
+            const numStrings = 5;
+            const stringSpacing = canvasWidth / (numStrings + 1);
+            const amplitude = 20;
+
+            let mouseOverAnyString = false;
+
+            for (let i = 0; i < numStrings; i++) {
+                const xStart = stringSpacing * (i + 1);
+                const yMiddle = canvasHeight / 2;
+                let currentFrequency = baseFrequency;
+
+                // Check if mouse is near this string
+                const distToMouse = Math.abs(mouseX_string - xStart);
+                 if (mouseX_string !== -1 && distToMouse < stringSpacing / 2) {
+                     currentFrequency *= hoverFrequencyMultiplier;
+                     stringCtx.strokeStyle = '#facc15'; // Tailwind yellow-400 for hovered string
+                     mouseOverAnyString = true;
+                 } else {
+                      stringCtx.strokeStyle = '#a78bfa'; // Tailwind violet-400
+                 }
+
+
+                stringCtx.beginPath();
+                stringCtx.moveTo(xStart, 0);
+                for (let y = 0; y < canvasHeight; y++) {
+                    const angle = y * currentFrequency + stringPhase + i * 0.5; // Add offset for variety
+                    const x = xStart + Math.sin(angle) * amplitude * (y / canvasHeight) * (1 - y / canvasHeight) * 4; // Shape the wave
+                    stringCtx.lineTo(x, y);
+                }
+                stringCtx.stroke();
+            }
+             stringPhase += 0.1; // Animate the phase
+        }
+
+        // --- Spacetime Grid Visualization ---
+        const gridSize = 25;
+        const numLinesX = Math.floor(canvasWidth / gridSize);
+        const numLinesY = Math.floor(canvasHeight / gridSize);
+        let distortionPoint = null; // {x, y, strength}
+        let distortionDecay = 0.95; // How fast distortion fades
+
+        spacetimeCanvas.addEventListener('click', (e) => {
+            const rect = spacetimeCanvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            distortionPoint = { x: clickX, y: clickY, strength: 25 }; // Initial strength
+        });
+
+        function drawSpacetimeGrid() {
+            spacetimeCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+            spacetimeCtx.strokeStyle = '#6b7280'; // Tailwind gray-500
+            spacetimeCtx.lineWidth = 0.5;
+
+             // Apply distortion decay
+             if (distortionPoint && distortionPoint.strength > 0.1) {
+                 distortionPoint.strength *= distortionDecay;
+             } else {
+                 distortionPoint = null; // Remove distortion when small
+             }
+
+
+            // Draw vertical lines
+            for (let i = 0; i <= numLinesX; i++) {
+                const x = i * gridSize;
+                spacetimeCtx.beginPath();
+                spacetimeCtx.moveTo(distort(x, 0).x, distort(x, 0).y);
+                for (let y = 1; y <= canvasHeight; y += 5) { // Draw line segment by segment
+                    const p = distort(x, y);
+                    spacetimeCtx.lineTo(p.x, p.y);
+                }
+                 spacetimeCtx.stroke();
+            }
+
+            // Draw horizontal lines
+            for (let j = 0; j <= numLinesY; j++) {
+                const y = j * gridSize;
+                 spacetimeCtx.beginPath();
+                 spacetimeCtx.moveTo(distort(0, y).x, distort(0, y).y);
+                 for (let x = 1; x <= canvasWidth; x += 5) {
+                      const p = distort(x, y);
+                      spacetimeCtx.lineTo(p.x, p.y);
+                 }
+                spacetimeCtx.stroke();
+            }
+        }
+
+        // Function to apply distortion based on click point
+        function distort(x, y) {
+            if (!distortionPoint) {
+                return { x, y };
+            }
+
+            const dx = x - distortionPoint.x;
+            const dy = y - distortionPoint.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const maxDist = 100; // Radius of influence
+
+            if (distance < maxDist) {
+                 const factor = distortionPoint.strength * (1 - distance / maxDist);
+                 // Push points away from the click - simple radial distortion
+                 const angle = Math.atan2(dy, dx);
+                 return {
+                     x: x + Math.cos(angle) * factor,
+                     y: y + Math.sin(angle) * factor
+                 };
+            } else {
+                return { x, y };
+            }
+        }
+
+
+        // --- Expansion Visualization ---
+        const numGalaxies = 30;
+        let galaxies = [];
+        const center = { x: canvasWidth / 2, y: canvasHeight / 2 };
+
+        function initGalaxies() {
+            galaxies = [];
+            for (let i = 0; i < numGalaxies; i++) {
+                 // Distribute more densely towards the center initially
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.sqrt(Math.random()) * (Math.min(canvasWidth, canvasHeight) / 2.5); // sqrt for more central distribution
+                galaxies.push({
+                    initialAngle: angle,
+                    initialRadius: radius, // Store initial position relative to center
+                    size: Math.random() * 2 + 1 // Random size
+                });
+            }
+        }
+
+        function drawExpansion() {
+            expansionCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+            expansionCtx.fillStyle = '#e5e7eb'; // Tailwind gray-200 for galaxies
+
+            // Calculate expansion factor based on time slider
+            // More complex: Simulate *accelerating* expansion, but *rate* of acceleration decreases over time
+            // Let's use a simpler model first: expansion factor increases with time, but less steeply at later times.
+            const timeProgress = currentTime / 100; // 0 to 1
+            // Example: factor = 1 + time^0.8 (starts at 1, grows, but slope decreases)
+            // Let's tie it to DE density concept: Higher DE (early time) = faster *acceleration*
+            // A simple proxy: Expansion factor grows, but growth slows down
+            const baseExpansion = 1.0;
+            const maxExpansionRate = 1.5; // How much faster things move at peak DE
+            const minExpansionRate = 0.5; // How much faster things move at low DE
+            // Interpolate the rate based on time (inversely related to DE density)
+            const currentExpansionRate = maxExpansionRate - (maxExpansionRate - minExpansionRate) * timeProgress;
+            // Total expansion is integral of rate, simplified here:
+            const expansionFactor = baseExpansion + timeProgress * currentExpansionRate;
+
+
+            galaxies.forEach(galaxy => {
+                // Calculate current position based on initial position and expansion factor
+                const currentRadius = galaxy.initialRadius * expansionFactor;
+                const x = center.x + Math.cos(galaxy.initialAngle) * currentRadius;
+                const y = center.y + Math.sin(galaxy.initialAngle) * currentRadius;
+
+                // Only draw if within bounds (or slightly outside)
+                if (x > -10 && x < canvasWidth + 10 && y > -10 && y < canvasHeight + 10) {
+                    expansionCtx.beginPath();
+                    expansionCtx.arc(x, y, galaxy.size, 0, Math.PI * 2);
+                    expansionCtx.fill();
+                }
+            });
+        }
+
+        // --- Animation Loop ---
+        function animate() {
+            drawStrings();
+            drawSpacetimeGrid();
+            drawExpansion(); // Updated based on currentTime
+            requestAnimationFrame(animate);
+        }
+
+        // --- Initial Setup ---
+        initGalaxies();
+        animate(); // Start the animation loop
+
+    </script>
+
+</body>
+</html>
